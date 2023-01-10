@@ -223,7 +223,7 @@ metadata:
   name: hpadeployment
   namespace: test-ns
 spec:
-  replicas: 2
+  replicas: 2 # no need of replicas in HPA
   strategy:
     type: RollingUpdate
     rollingUpdate:

@@ -332,7 +332,7 @@ spec:
       storage: 2Gi
 
 ---
-#create persistant volume
+#create persistant volume of hostpath
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -344,5 +344,20 @@ spec:
   - ReadWriteOnce
   hostPath:
     path: /temp/mongodata
+
+---
+#create persistant volume of nfs
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfspv
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    path: /tmp #the which we give in nfs server or instance
+    server: 172.17.0.2 # private ip of nfs instance server
 
 ---

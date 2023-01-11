@@ -330,3 +330,19 @@ spec:
   resources:
     requests:
       storage: 2Gi
+
+---
+#create persistant volume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hostpathpv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: /temp/mongodata
+
+---

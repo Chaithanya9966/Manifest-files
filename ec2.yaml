@@ -281,3 +281,38 @@ spec:
       target:
         type: Utilization
         averageUtiloization: 70  #it is percentage
+---
+## using volumes to a manifest file
+apiVersion: apps/v1
+kind: ReplicationController
+metadata:
+  name: mongodbrc
+  namespace: test-ns
+spec:
+  replicas: 3
+  selector:
+    app: mongodb
+  template:
+    metadata:
+      name: mongodbrcpod
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodbrccontainer
+          image: <Image>
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: abcde
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: 1234@abc
+          volumeMounts:
+            - name: mongodbvol #the name must same as volume name
+              mountPath: /data/db
+      volumes:
+        - name: mongodbvol
+          mountPath: /temp/mongodata
+
+---

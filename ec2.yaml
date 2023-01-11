@@ -361,3 +361,4 @@ spec:
     server: 172.17.0.2 # private ip of nfs instance server
 
 ---
+apiVersion: v1

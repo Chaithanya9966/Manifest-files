@@ -316,3 +316,17 @@ spec:
           Path: /temp/mongodata
 
 ---
+# persistant volume cliam
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongobdpvc
+  namespace: test-ns
+spec:
+  storageClassName: manual
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

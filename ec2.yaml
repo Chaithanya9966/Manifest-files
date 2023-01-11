@@ -313,6 +313,6 @@ spec:
               mountPath: /data/db
       volumes:
         - name: mongodbvol
-          mountPath: /temp/mongodata
+          Path: /temp/mongodata
 
 ---

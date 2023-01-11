@@ -1,4 +1,4 @@
-provider "aws"{
+provider "aws" {
     region = "us-east-1"
     access_key= "AKIAQYDYXHHKTG7CFR7C"
     secret_key = "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"
@@ -193,7 +193,7 @@ metadata:
   namespace: test-ns
 spec:
   hard:
-    requests.cpu: "0.25" (or) "250m" # m=millicore
+    requests.cpu: "0.25" #(or) "250m"  m=millicore
     requests.memory: 256mi # mi=megabytes
     limits.cpu: "1"
     limits.memory: 1Gi # Gi= Gigabytes

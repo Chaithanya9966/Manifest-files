@@ -412,17 +412,17 @@ spec:
       env:
       - name: MONGO_DB_HOSTNAME
         ValueFrom:
-          ConfigMapRef:
+          ConfigMapKeyRef:
             name: springappconfig # use configmap manifest file name
             value: mongodbhostname # use configmap manifest file key name
       - name: MONGO_DB_USERNAME
         ValueFrom:
-          ConfigMapRef: 
+          ConfigMapKeyRef: 
             name: springappcong # use configmap manifest file name
             value: mongodbusername # use configmap manifest file key name
       - name: MONGO_INITDB_ROOT_PASSWORD
         ValueFrom:
-          SecretMapRef:
+          SecretKeyRef:
             name: springappserect # use secret manifest file name
             value: mongodbpassword # use secret manifest file key name
     volumes:

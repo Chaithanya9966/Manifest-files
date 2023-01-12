@@ -361,3 +361,67 @@ spec:
     server: 172.17.0.2 # private ip of nfs instance server
 
 ---
+#Configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: springappconfig
+  namespace: test-ns
+data:
+  #<my-key>: <my-value>
+  mongodbhostname: mongosvc
+  mongodbusername: abcd
+
+---
+# Secret
+apiVersion: v1
+kind: secret
+metadata:
+  name: springappsecret
+  namespace: test-ns
+data:
+  mongodbpassword: 1234@abc
+
+---
+# using above secret and Configmap in RS
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: springapprs
+  namespace: test-ns
+spec: 
+  replicas: 2
+  selector:
+    matchLabels:
+      app: springapp
+  template:  
+    metadata:
+    name: springapppod
+    labels:
+      app: springapp
+  spec:
+    containers:
+    - name: springappcontainer
+      image: k8s.ecr.io/springapp:1
+      ports:
+      - containerport: 3000
+      env:
+      - name: MONGO_DB_HOSTNAME
+        ValueFrom:
+          ConfigMapRef:
+            name: springappconfig # use configmap manifest file name
+            value: mongodbhostname # use configmap manifest file key name
+      - name: MONGO_DB_USERNAME
+        ValueFrom:
+          ConfigMapRef: 
+            name: springappcong # use configmap manifest file name
+            value: mongodbusername # use configmap manifest file key name
+      - name: MONGO_INITDB_ROOT_PASSWORD
+        ValueFrom:
+          SecretMapRef:
+            name: springappserect # use secret manifest file name
+            value: mongodbpassword # use secret manifest file key name
+    volumes:
+    - name:  springappvol
+      PersistantVolumeClaim:
+        ClaimName: mongodbpvc # use pvc manifest file name

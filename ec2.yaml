@@ -49,6 +49,7 @@ spec:
   - port: 80 # service port
     targetport: 8080 # container port
     NodePort: 31820
+
 ---
 apiversion: v1
 kind: pod
@@ -215,8 +216,9 @@ spec:
       memory: 256mi
     type: container
 
-## Deployment file and HPA(HorizontalAutoScaler) file
 ---
+## Deployment file and HPA(HorizontalAutoScaler) file
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -281,6 +283,7 @@ spec:
       target:
         type: Utilization
         averageUtiloization: 70  #it is percentage
+
 ---
 ## using volumes to a manifest file
 apiVersion: apps/v1
@@ -425,3 +428,6 @@ spec:
     - name:  springappvol
       PersistantVolumeClaim:
         ClaimName: mongodbpvc # use pvc manifest file name
+
+---
+

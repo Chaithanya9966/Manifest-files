@@ -1,0 +1,434 @@
+provider "aws" {
+    region = "us-east-1"
+    access_key= "AKIAQYDYXHHKTG7CFR7C"
+    secret_key = "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"
+}
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+resource "aws_instance" "test"{
+    count = 1
+    ami = "ami-09d3b3274b6c5d4aa"
+    instance_type = "t2.micro"
+    key_name = "pem-key1"
+    tags = {
+
+apiVersion: apps/v1 
+kind: ReplicaSet
+metadata:
+  name: java-webapprs
+  namespace: test-ns
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: java-webapp
+  template:
+    metadata:
+      name: java-webapp-container
+      labels:
+        app: java-webapp
+    spec:
+      containers:
+      - name: java-webapp-pod
+        image: Chaithu/java-webapp:1
+        ports:
+        - containerport: 8080
+
+---
+apiVersion: v1
+kind: service
+metadata:
+  name: java-webappsvc
+  namespace: test-ns
+spec:
+  type: NodePort
+  selector:
+    app: java-webapp
+  ports:
+  - port: 80 # service port
+    targetport: 8080 # container port
+    NodePort: 31820
+
+---
+apiversion: v1
+kind: pod
+metadata:
+  name: java-webapp
+  labels:
+    app: java-webapp
+  namespace: test-ns
+spec:
+  containers:
+  - name: java-webapp-conatiner
+    image: SVC/java-webapp:1
+    ports:
+    - containerport: 8080
+  
+---
+apiVersion: v1
+kind: NameSpace
+metadata:
+  name: test-ns
+
+---
+apiVersion: v1
+kind: service
+metadata:
+  name: java-webappsvc
+  namespace: test-ns
+spec:
+  type: ClusterIp
+  selector:
+    app: java-webapp
+  ports:
+  - port: 80 # service port
+    targetport: 8080 # Container port
+
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: java-webapprc
+  namespace: test-ns
+spec:
+  replicas: 3
+  selector:
+    app: java-webapp
+  template:
+    metadata:
+      name: java-webapp-pod
+      lables:
+        app: java-webapp
+    spec:
+      conatiners:
+      - name: java-webapp-container
+        image: SVC-Project/java-webapp:1
+        ports:
+        - containerports: 8080
+
+---
+apiVersion: apps/v1
+kind: DeamonSet
+metadata:
+  name: java-webappDS
+  namespace: test-ns
+spec:
+  selector:
+    matchExpression:
+    - key: app
+      operator: in
+      values:
+      - java-webapp
+  template:
+    metadata:
+      name: java-webapp-pod
+      labels:
+        app: java-webapp
+    spec:
+      containers:
+      - name: java-webapp-container
+        image: SVC-Project/java-webapp:1
+        ports:
+        - containerports: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-webappD
+  namespace: test-ns
+spec:
+  replicas: 3
+  strategy:
+    type: Recreate
+  selector:
+   matchLabels:
+     app: java-webapp
+  template:
+    metadata:
+      name: java-webapp-pod
+      labels:
+        app: java-webapp
+    spec:
+      containers:
+      - name: java-webapp-container
+        image: SVC-Project/java-webapp:1
+        ports:
+        - containerport: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-webappD
+  namespace: test-ns
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    minReadySeconds: 30
+  selector:
+   matchLabels:
+     app: java-webapp
+  template:
+    metadata:
+      name: java-webapp-pod
+      labels:
+        app: java-webapp
+    spec:
+      containers:
+      - name: java-webapp-container
+        image: SVC-Project/java-webapp:1
+        ports:
+        - containerport: 8080     
+
+---
+apiVersion: v1
+kind: ResourceQuoata
+metadata:
+  name: test-ns-RQ
+  namespace: test-ns
+spec:
+  hard:
+    requests.cpu: "0.25" #(or) "250m"  m=millicore
+    requests.memory: 256mi # mi=megabytes
+    limits.cpu: "1"
+    limits.memory: 1Gi # Gi= Gigabytes
+    pods: 4 # no. of pods created in that namespace
+
+---
+apiVersion: v1
+kind: LimitRange
+metadata: 
+  name: test-ns-LR
+  namespace: test-ns
+spec:
+  limits:
+  - default:
+      cpu: 500m
+      memory: 512mi
+    defaultRequest:
+      cpu: 100m
+      memory: 256mi
+    type: container
+
+---
+## Deployment file and HPA(HorizontalAutoScaler) file
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hpadeployment
+  namespace: test-ns
+spec:
+  replicas: 2 # no need of replicas in HPA
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      minavailable: 1
+    minreadyseconds: 30
+  selector:
+    matchExpression:
+      key: app
+      operator: in
+      values:
+      - hpadeployment
+  template:
+    metadata:
+      name: hpa-deployment-pod
+      labels:
+        app: hpadeployment
+    spec:
+      containers:
+      - name: hpa-deployment-container
+        image: k8s.svc.io/hpadeployment:2
+        ports:
+        - containerport: 80
+        resources:
+          requests:
+            cpu: "0.25"
+            memory: "64mi"
+          limits:
+            cpu: "100m"
+            memory: "256mi"
+
+---
+#HPA
+apiVersion: autoscaling/v2beta2
+kind: HorizontalAutoscaler
+metadata:
+  name: hpadeploymentscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hpadeployment  #use above deployment name only
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80  #it is percentage
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtiloization: 70  #it is percentage
+
+---
+## using volumes to a manifest file
+apiVersion: apps/v1
+kind: ReplicationController
+metadata:
+  name: mongodbrc
+  namespace: test-ns
+spec:
+  replicas: 3
+  selector:
+    app: mongodb
+  template:
+    metadata:
+      name: mongodbrcpod
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodbrccontainer
+          image: <Image>
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: abcde
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: 1234@abc
+          volumeMounts:
+            - name: mongodbvol #the name must same as volume name
+              mountPath: /data/db
+      volumes:
+        - name: mongodbvol
+          Path: /temp/mongodata
+
+---
+# persistant volume cliam
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongobdpvc
+  namespace: test-ns
+spec:
+  storageClassName: manual
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+#create persistant volume of hostpath
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hostpathpv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: /temp/mongodata
+
+---
+#create persistant volume of nfs
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfspv
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    path: /tmp #the which we give in nfs server or instance
+    server: 172.17.0.2 # private ip of nfs instance server
+
+---
+#Configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: springappconfig
+  namespace: test-ns
+data:
+  #<my-key>: <my-value>
+  mongodbhostname: mongosvc
+  mongodbusername: abcd
+
+---
+# Secret
+apiVersion: v1
+kind: secret
+metadata:
+  name: springappsecret
+  namespace: test-ns
+type: Opaque
+StringData:
+  mongodbpassword: 1234@abc
+
+---
+# using above secret and Configmap in RS
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: springapprs
+  namespace: test-ns
+spec: 
+  replicas: 2
+  selector:
+    matchLabels:
+      app: springapp
+  template:  
+    metadata:
+    name: springapppod
+    labels:
+      app: springapp
+  spec:
+    containers:
+    - name: springappcontainer
+      image: k8s.ecr.io/springapp:1
+      ports:
+      - containerport: 3000
+      env:
+      - name: MONGO_DB_HOSTNAME
+        ValueFrom:
+          ConfigMapKeyRef:
+            name: springappconfig # use configmap manifest file name
+            value: mongodbhostname # use configmap manifest file key name
+      - name: MONGO_DB_USERNAME
+        ValueFrom:
+          ConfigMapKeyRef: 
+            name: springappcong # use configmap manifest file name
+            value: mongodbusername # use configmap manifest file key name
+      - name: MONGO_INITDB_ROOT_PASSWORD
+        ValueFrom:
+          SecretKeyRef:
+            name: springappserect # use secret manifest file name
+            value: mongodbpassword # use secret manifest file key name
+    volumes:
+    - name:  springappvol
+      PersistantVolumeClaim:
+        ClaimName: mongodbpvc # use pvc manifest file name
+
+---
+
